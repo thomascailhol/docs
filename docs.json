@@ -103,5 +103,10 @@
     "body": {
       "family": "Inter"
     }
+  },
+  "background": {
+    "color": {
+      "dark": "#030310"
+    }
   }
 }
