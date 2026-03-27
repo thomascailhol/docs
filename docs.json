@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "linden",
+  "theme": "mint",
   "name": "The Buoy API",
   "colors": {
     "primary": "#0369A1",
@@ -91,6 +91,17 @@
   "footer": {
     "socials": {
       "x": "https://x.com/thesurfkit"
+    }
+  },
+  "appearance": {
+    "default": "dark"
+  },
+  "fonts": {
+    "heading": {
+      "family": "Inter"
+    },
+    "body": {
+      "family": "Inter"
     }
   }
 }
