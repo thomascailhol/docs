@@ -50,9 +50,17 @@
       },
       {
         "tab": "API Reference",
-        "openapi": "api-reference/openapi.json",
-        "pages": [
-          "api-reference/introduction"
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "openapi": "api-reference/openapi.json"
+          }
         ]
       }
     ],
