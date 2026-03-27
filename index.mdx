@@ -1,97 +1,82 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "The Buoy API"
+description: "Real-time ocean buoy data for developers. Wave heights, periods, water temperatures, and more — served fresh from active buoy networks."
 ---
 
-## Setting up
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.png"
+  alt="The Buoy API"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.png"
+  alt="The Buoy API"
+/>
 
-Get your documentation site up and running in minutes.
+## What is the Buoy API?
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+The Buoy API gives you programmatic access to real-time and historical ocean observation data from an international network of wave buoys, weather stations, and surf spots. Data is sourced from official networks including **Candhis**, **Météo France**, **NOAA/NDBC**, **Sofar Ocean**, and others.
 
-## Make it yours
+Every response uses a consistent `{status, data, meta}` envelope, making it easy to integrate into any stack.
 
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Make your first API call in under 5 minutes.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Authentication" icon="key" href="/authentication">
+    Understand how API key authentication works.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="France Buoys Guide" icon="location-dot" href="/guides/country-buoys">
+    Fetch all active buoys for a country in one call.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="API Reference" icon="code" href="/api-reference/introduction">
+    Browse the full endpoint documentation.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Key Features
 
-Everything you need to create world-class documentation.
+<AccordionGroup>
+  <Accordion title="Real-time buoy readings" icon="wave-square">
+    Access the latest wave height, period, direction, and water temperature from hundreds of active buoys worldwide. Readings are typically updated every 30 minutes.
+  </Accordion>
+  <Accordion title="Country and geographic filtering" icon="earth-europe">
+    Filter buoys by ISO country code (`?country=FR`), geographic bounding box, or a coordinates + radius query. Each response includes pagination metadata.
+  </Accordion>
+  <Accordion title="Historical data" icon="clock-rotate-left">
+    Retrieve paginated historical readings per buoy with date range filters, or search for the reading closest to a specific timestamp.
+  </Accordion>
+  <Accordion title="Surf spots and forecasts" icon="sun">
+    Access surf spot data with nearby buoy and weather station associations, plus multi-day wave and weather forecasts.
+  </Accordion>
+  <Accordion title="Rate limiting and tracking" icon="gauge">
+    Every response includes `X-RateLimit-*` headers. Requests exceeding your hourly quota return a `429` with a `retry_after` value so your client can back off gracefully.
+  </Accordion>
+</AccordionGroup>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## API at a Glance
 
-## Need inspiration?
+| Property | Value |
+|----------|-------|
+| Base URL | `https://thesurfkit.com/api/v2` |
+| Auth | `Authorization: Bearer <api_key>` |
+| Format | JSON (`application/json`) |
+| Default rate limit | 1,000 requests / hour |
+| Version | v2 (production) |
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+## Data Sources
+
+| Network | Region | Type |
+|---------|--------|------|
+| Candhis | France | Wave buoys |
+| Météo France | France | Wave buoys |
+| NOAA / NDBC | USA | Wave & weather buoys |
+| Sofar Ocean | Global | Spotter buoys |
+| Vegagerðin | Iceland | Wave buoys |
+
+---
+
+<Note>
+  API access is currently by invitation. To request access, email [api-support@thesurfkit.com](mailto:api-support@thesurfkit.com).
+</Note>

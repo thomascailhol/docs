@@ -1,0 +1,99 @@
+---
+title: "Authentication"
+description: "All v2 API requests require an API key passed as a Bearer token."
+---
+
+## Getting an API Key
+
+API access is currently by invitation. To request credentials, email [api-support@thesurfkit.com](mailto:api-support@thesurfkit.com).
+
+Once your request is approved, you will receive a single-use API key. **Store it securely — it is only shown once and cannot be retrieved later.** If you lose your key, a new one can be generated, which will immediately invalidate the old one.
+
+<Note>
+  API keys are stored as BCrypt hashes. Only you ever see the plain-text key. If it is compromised, contact support to rotate it.
+</Note>
+
+## Using Your API Key
+
+Include your API key in every request using the `Authorization` header:
+
+```bash
+Authorization: Bearer YOUR_API_KEY
+```
+
+### Header authentication (recommended)
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://thesurfkit.com/api/v2/buoys?country=FR"
+```
+
+### Query parameter (alternative)
+
+For environments where setting custom headers is difficult, you can pass the key as a query parameter:
+
+```bash
+curl "https://thesurfkit.com/api/v2/buoys?country=FR&api_key=YOUR_API_KEY"
+```
+
+<Warning>
+  Query parameter auth is provided for convenience only. Prefer the `Authorization` header — query parameters appear in server logs and browser history.
+</Warning>
+
+## Public Endpoints
+
+Two endpoints do not require authentication and are available to anyone:
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/v2/buoys/search` | Search buoys by name or identifier |
+| `GET /api/v2/buoys/nearest` | Find the nearest buoy to coordinates |
+
+## Authentication Errors
+
+<ResponseField name="401 Unauthorized — missing key">
+```json
+{
+  "error": "unauthorized",
+  "message": "API key required"
+}
+```
+</ResponseField>
+
+<ResponseField name="401 Unauthorized — invalid key">
+```json
+{
+  "error": "unauthorized",
+  "message": "Invalid API key"
+}
+```
+</ResponseField>
+
+## Rate Limit Headers
+
+Every authenticated response includes these headers so you can track your usage:
+
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 987
+X-RateLimit-Reset: 1735326000
+```
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Your hourly request quota |
+| `X-RateLimit-Remaining` | Requests remaining this hour |
+| `X-RateLimit-Reset` | Unix timestamp when the quota resets |
+
+When your quota is exceeded, the API returns `429 Too Many Requests`:
+
+```json
+{
+  "error": "rate_limit_exceeded",
+  "message": "You have exceeded 1000 requests per hour",
+  "retry_after": 1847,
+  "reset_at": "2026-03-27T15:00:00Z"
+}
+```
+
+See the [Rate Limits guide](/guides/rate-limits) for details on planning around quotas.

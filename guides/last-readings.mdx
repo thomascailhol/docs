@@ -1,0 +1,125 @@
+---
+title: "Bulk Last Readings"
+description: "Efficiently fetch the latest reading for a known list of buoys."
+---
+
+## When to use this endpoint
+
+`GET /buoys/last_readings` is best when:
+
+- You already have a list of specific buoy IDs you care about (e.g. stored in your own database)
+- You want only reading data, without buoy metadata, for a minimal payload
+- You need targeted polling for a small, fixed set of buoys
+
+If you want **all buoys in a country** and don't have IDs stored yet, use [`GET /buoys?country=FR`](/guides/country-buoys) instead — it returns buoys with readings included in a single call and is the right starting point for building your buoy ID list.
+
+## Basic usage
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://thesurfkit.com/api/v2/buoys/last_readings?ids=12,45,78"
+```
+
+By default, only the **first 3 IDs** in your list are returned. To fetch more, pass a `limit`:
+
+```bash
+# Fetch up to 100 buoys at once
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://thesurfkit.com/api/v2/buoys/last_readings?ids=12,45,78,91,34&limit=5"
+```
+
+## Parameters
+
+| Parameter | Type | Default | Max | Description |
+|-----------|------|---------|-----|-------------|
+| `ids` | string | required | — | Comma-separated or array-style buoy IDs |
+| `limit` | integer | `3` | `100` | How many IDs from the list to process |
+
+**Array-style IDs** also work:
+
+```bash
+"?ids[]=12&ids[]=45&ids[]=78&limit=3"
+```
+
+## Response
+
+```json
+{
+  "status": "success",
+  "data": {
+    "buoys": [
+      {
+        "id": 12,
+        "name": "Anglet",
+        "lat": 43.4832,
+        "lng": -1.5586,
+        "source": "Candhis",
+        "last_reading": {
+          "significient_height": 1.8,
+          "maximum_height": 2.4,
+          "period": 9.5,
+          "direction": 285,
+          "water_temperature": 14.2,
+          "time": "2026-03-27T08:00:00Z"
+        }
+      }
+    ],
+    "missing_ids": [999]
+  },
+  "meta": {
+    "timestamp": "2026-03-27T09:00:00Z"
+  }
+}
+```
+
+### `missing_ids`
+
+Any IDs you requested that don't exist in the database are returned in `missing_ids`. This lets you detect stale IDs in your application without additional lookups.
+
+## Payload design
+
+The endpoint returns only the fields needed for reading collection. Importantly, the large JSONB forecast columns stored on buoys (`tide_forecast`, `marine_forecast`, `weather_forecast`) are **never included** — keeping payloads lean even at 100 buoys per request.
+
+## Polling 30+ buoys
+
+If you have more than 100 buoys, chunk the ID list and make multiple calls. Each call counts as one request against your rate limit:
+
+```python
+import requests
+
+API_KEY = "YOUR_API_KEY"
+BASE_URL = "https://thesurfkit.com/api/v2"
+
+def fetch_last_readings(buoy_ids: list[int], chunk_size: int = 100) -> list[dict]:
+    headers = {"Authorization": f"Bearer {API_KEY}"}
+    all_buoys = []
+
+    for i in range(0, len(buoy_ids), chunk_size):
+        chunk = buoy_ids[i : i + chunk_size]
+        ids_param = ",".join(map(str, chunk))
+
+        response = requests.get(
+            f"{BASE_URL}/buoys/last_readings",
+            params={"ids": ids_param, "limit": len(chunk)},
+            headers=headers,
+            timeout=15,
+        )
+        response.raise_for_status()
+        all_buoys.extend(response.json()["data"]["buoys"])
+
+    return all_buoys
+
+# Example: 150 buoy IDs → 2 requests
+my_buoy_ids = list(range(1, 151))
+readings = fetch_last_readings(my_buoy_ids)
+print(f"Got readings for {len(readings)} buoys")
+```
+
+## Choosing between country filter and last_readings
+
+| Scenario | Recommended endpoint |
+|----------|---------------------|
+| First run — discover all France buoys | `GET /buoys?country=FR` |
+| Periodic poll — you already have IDs stored | `GET /buoys/last_readings?ids=...&limit=100` |
+| Small fixed list (≤ 3 buoys) | `GET /buoys/last_readings?ids=...` (no limit needed) |
+| Need buoy name, coords, and timezone too | `GET /buoys?country=FR` (all metadata included) |

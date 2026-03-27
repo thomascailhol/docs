@@ -1,33 +1,82 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: "API Reference"
+description: "Complete reference for all Buoy API v2 endpoints."
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Base URL
 
-## Welcome
+All endpoints are served from:
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
-
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+```
+https://thesurfkit.com/api/v2
+```
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+All endpoints except `GET /buoys/search` and `GET /buoys/nearest` require a Bearer token:
+
+```bash
+Authorization: Bearer YOUR_API_KEY
+```
+
+See [Authentication](/authentication) for details.
+
+## Response format
+
+Every response uses a consistent envelope:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
+{
+  "status": "success",
+  "data": { ... },
+  "meta": {
+    "timestamp": "2026-03-27T09:00:00Z",
+    "page": 1,
+    "per_page": 50,
+    "total_pages": 4
   }
-]
+}
 ```
+
+Error responses:
+
+```json
+{
+  "error": "error_code",
+  "message": "Human-readable description"
+}
+```
+
+## Error codes
+
+| HTTP status | `error` value | Meaning |
+|-------------|---------------|---------|
+| `400` | `bad_request` | Missing or malformed parameters |
+| `401` | `unauthorized` | Invalid or missing API key |
+| `404` | `resource_not_found` | Resource doesn't exist |
+| `422` | `validation_failed` | Parameter validation error |
+| `429` | `rate_limit_exceeded` | Hourly quota exceeded |
+
+## Pagination
+
+List endpoints accept `page` and `per_page` parameters. Pagination metadata is always in `meta`:
+
+```json
+"meta": {
+  "page": 2,
+  "per_page": 50,
+  "total_pages": 10,
+  "timestamp": "2026-03-27T09:00:00Z"
+}
+```
+
+## Units
+
+| Measurement | Unit |
+|-------------|------|
+| Wave height | metres (m) |
+| Wave period | seconds (s) |
+| Wave direction | degrees (°), clockwise from north |
+| Wind speed | km/h |
+| Temperature | °C |
+| Distance (radius) | kilometres (km) |

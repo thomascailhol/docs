@@ -1,0 +1,134 @@
+---
+title: "Rate Limits"
+description: "Understand your request quota and handle 429 responses gracefully."
+---
+
+## Default limits
+
+Every API key has a default quota of **1,000 requests per hour**. The quota resets at the top of each clock hour (e.g. 14:00 → 15:00 UTC).
+
+Custom quotas can be configured per account. Contact [api-support@thesurfkit.com](mailto:api-support@thesurfkit.com) if you need a higher limit.
+
+## Rate limit headers
+
+Every authenticated response includes three headers:
+
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 987
+X-RateLimit-Reset: 1711548000
+```
+
+| Header | Type | Description |
+|--------|------|-------------|
+| `X-RateLimit-Limit` | integer | Your total hourly quota |
+| `X-RateLimit-Remaining` | integer | Requests left in the current hour |
+| `X-RateLimit-Reset` | Unix timestamp | When the quota window resets |
+
+## When you exceed the limit
+
+If `X-RateLimit-Remaining` reaches 0, the next request returns:
+
+**HTTP 429 Too Many Requests**
+
+```json
+{
+  "error": "rate_limit_exceeded",
+  "message": "You have exceeded 1000 requests per hour",
+  "retry_after": 1847,
+  "reset_at": "2026-03-27T15:00:00Z"
+}
+```
+
+The response also includes a `Retry-After` header with the same value in seconds.
+
+## Handling 429s in your code
+
+<CodeGroup>
+
+```python Python
+import requests
+import time
+
+def api_request_with_retry(url, headers, params=None, max_retries=3):
+    for attempt in range(max_retries):
+        response = requests.get(url, headers=headers, params=params, timeout=15)
+
+        if response.status_code == 429:
+            retry_after = int(response.json().get("retry_after", 60))
+            print(f"Rate limited. Retrying in {retry_after}s...")
+            time.sleep(retry_after)
+            continue
+
+        response.raise_for_status()
+        return response.json()
+
+    raise Exception("Max retries exceeded")
+```
+
+```javascript Node.js
+async function apiRequestWithRetry(url, headers, params, maxRetries = 3) {
+  const fullUrl = new URL(url);
+  if (params) {
+    Object.entries(params).forEach(([k, v]) =>
+      fullUrl.searchParams.set(k, v)
+    );
+  }
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const response = await fetch(fullUrl.toString(), { headers });
+
+    if (response.status === 429) {
+      const body = await response.json();
+      const retryAfter = body.retry_after ?? 60;
+      console.log(`Rate limited. Retrying in ${retryAfter}s...`);
+      await new Promise((r) => setTimeout(r, retryAfter * 1000));
+      continue;
+    }
+
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    return response.json();
+  }
+
+  throw new Error("Max retries exceeded");
+}
+```
+
+</CodeGroup>
+
+## Planning your request budget
+
+For a cron job collecting French buoy readings every 30 minutes:
+
+| Action | Calls | Frequency | Calls / hour |
+|--------|-------|-----------|-------------|
+| `GET /buoys?country=FR` | 1 | Every 30 min | **2** |
+
+That's just **2 requests per hour** — well within any quota. Even if you poll every 10 minutes, you'd only use 6 requests/hour for the entire French buoy network.
+
+For larger setups polling multiple countries or using `last_readings` in batches:
+
+| Action | Calls per run | Runs / hour | Calls / hour |
+|--------|--------------|-------------|-------------|
+| 3 countries × 1 call | 3 | 2 | **6** |
+| 200 buoys via `last_readings` (chunks of 100) | 2 | 2 | **4** |
+| All of the above | — | — | **~10** |
+
+The 1,000 request/hour default is generous for most monitoring workloads.
+
+## Tips to stay within limits
+
+<AccordionGroup>
+  <Accordion title="Use country filter instead of last_readings for full scans" icon="earth-europe">
+    `GET /buoys?country=FR` returns all buoys with readings in **one call**. Using `last_readings` in batches for the same data costs multiple calls. Always start with the country filter.
+  </Accordion>
+  <Accordion title="Cache your buoy ID list" icon="database">
+    The list of buoys in a country doesn't change often. Fetch it once, store the IDs, and use `last_readings` for subsequent polls. Only re-sync the list weekly or when you see unexpected `missing_ids`.
+  </Accordion>
+  <Accordion title="Stagger your cron jobs" icon="clock">
+    If you have multiple jobs polling the API, offset their schedules so they don't all fire at the same time and spike your usage.
+  </Accordion>
+  <Accordion title="Check X-RateLimit-Remaining proactively" icon="gauge">
+    Read the headers on each response. If `remaining` is low, slow down before hitting the limit rather than handling 429s reactively.
+  </Accordion>
+</AccordionGroup>

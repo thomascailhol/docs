@@ -1,0 +1,231 @@
+---
+title: "Fetching Buoys by Country"
+description: "Get all active buoys for a country — with their latest readings — in a single API call."
+---
+
+## Overview
+
+The most efficient way to collect data for all buoys in a country is to use the `?country=` filter on `GET /buoys`. Unlike calling `last_readings` in batches, **a single country-filtered request returns complete buoy metadata and the latest reading for every active buoy**.
+
+## Getting all French buoys
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://thesurfkit.com/api/v2/buoys?country=FR"
+```
+
+Pass any [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code. France has approximately 25–35 active buoys at any given time, so all results fit in the default page.
+
+**Response structure:**
+
+```json
+{
+  "status": "success",
+  "data": {
+    "buoys": [
+      {
+        "id": 12,
+        "name": "Anglet",
+        "lat": 43.4832,
+        "lng": -1.5586,
+        "source": "Candhis",
+        "source_identifier": "64002",
+        "slug": "anglet",
+        "last_reading_time": "2026-03-27T08:00:00Z",
+        "readings_count": 142300,
+        "last_reading": {
+          "significient_height": 1.8,
+          "maximum_height": 2.4,
+          "period": 9.5,
+          "direction": 285,
+          "water_temperature": 14.2,
+          "time": "2026-03-27T08:00:00Z"
+        },
+        "timezone": "Europe/Paris"
+      }
+    ],
+    "count": 28
+  },
+  "meta": {
+    "page": 1,
+    "per_page": 500,
+    "total_pages": 1,
+    "timestamp": "2026-03-27T09:00:00Z"
+  }
+}
+```
+
+<Note>
+  When `?country=` is set, the per-page cap increases to 500 (from the default 100) since the geographic scope already constrains the result set.
+</Note>
+
+## Building a cron job
+
+Here's a complete cron job pattern to collect the latest readings for all French buoys every 30 minutes:
+
+<CodeGroup>
+
+```python Python
+import requests
+import json
+from datetime import datetime
+
+API_KEY = "YOUR_API_KEY"
+BASE_URL = "https://thesurfkit.com/api/v2"
+
+def collect_france_buoy_readings():
+    headers = {"Authorization": f"Bearer {API_KEY}"}
+
+    response = requests.get(
+        f"{BASE_URL}/buoys",
+        params={"country": "FR"},
+        headers=headers,
+        timeout=30,
+    )
+    response.raise_for_status()
+
+    data = response.json()
+    buoys = data["data"]["buoys"]
+    collected_at = datetime.utcnow().isoformat()
+
+    readings = [
+        {
+            "buoy_id": b["id"],
+            "buoy_name": b["name"],
+            "lat": b["lat"],
+            "lng": b["lng"],
+            "source": b["source"],
+            "timezone": b.get("timezone"),
+            "collected_at": collected_at,
+            "reading": b.get("last_reading"),
+        }
+        for b in buoys
+        if b.get("last_reading")
+    ]
+
+    print(f"Collected {len(readings)} readings from {len(buoys)} buoys")
+    return readings
+
+if __name__ == "__main__":
+    readings = collect_france_buoy_readings()
+    # Save to your database or message queue here
+    print(json.dumps(readings[0], indent=2))
+```
+
+```javascript Node.js
+const API_KEY = "YOUR_API_KEY";
+const BASE_URL = "https://thesurfkit.com/api/v2";
+
+async function collectFranceBuoyReadings() {
+  const response = await fetch(`${BASE_URL}/buoys?country=FR`, {
+    headers: { Authorization: `Bearer ${API_KEY}` },
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  const { data } = await response.json();
+  const collectedAt = new Date().toISOString();
+
+  return data.buoys
+    .filter((b) => b.last_reading)
+    .map((b) => ({
+      buoyId: b.id,
+      buoyName: b.name,
+      lat: b.lat,
+      lng: b.lng,
+      source: b.source,
+      timezone: b.timezone,
+      collectedAt,
+      reading: b.last_reading,
+    }));
+}
+
+collectFranceBuoyReadings()
+  .then((readings) => {
+    console.log(`Collected ${readings.length} readings`);
+    // Save to your database here
+  })
+  .catch(console.error);
+```
+
+```ruby Ruby
+require "net/http"
+require "json"
+require "uri"
+
+API_KEY = "YOUR_API_KEY"
+BASE_URL = "https://thesurfkit.com/api/v2"
+
+def collect_france_buoy_readings
+  uri = URI("#{BASE_URL}/buoys")
+  uri.query = URI.encode_www_form(country: "FR")
+
+  req = Net::HTTP::Get.new(uri)
+  req["Authorization"] = "Bearer #{API_KEY}"
+
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+
+  response = http.request(req)
+  raise "API error: #{response.code}" unless response.is_a?(Net::HTTPSuccess)
+
+  data = JSON.parse(response.body)
+  collected_at = Time.now.utc.iso8601
+
+  data["data"]["buoys"]
+    .select { |b| b["last_reading"] }
+    .map do |b|
+      {
+        buoy_id: b["id"],
+        buoy_name: b["name"],
+        lat: b["lat"],
+        lng: b["lng"],
+        source: b["source"],
+        timezone: b["timezone"],
+        collected_at: collected_at,
+        reading: b["last_reading"]
+      }
+    end
+end
+
+readings = collect_france_buoy_readings
+puts "Collected #{readings.length} readings"
+puts JSON.pretty_generate(readings.first)
+```
+
+</CodeGroup>
+
+## Cron schedule
+
+Buoy readings are typically updated every **30 minutes**. A reasonable polling interval is 30 minutes — more frequent calls would return duplicate readings and consume your rate limit budget unnecessarily.
+
+```bash
+# crontab — run every 30 minutes
+*/30 * * * * /usr/bin/python3 /path/to/collect_buoys.py >> /var/log/buoy_collector.log 2>&1
+```
+
+## Handling missing readings
+
+Some buoys may temporarily have no reading (e.g., maintenance, transmission gaps). The `last_reading` field will be `null` in those cases. Always guard against this:
+
+```python
+readings = [b for b in buoys if b.get("last_reading") is not None]
+```
+
+## Supported countries
+
+Any [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) code works. Currently active networks include:
+
+| Code | Country | Primary sources |
+|------|---------|----------------|
+| `FR` | France | Candhis, Météo France |
+| `ES` | Spain | Puertos del Estado |
+| `PT` | Portugal | SNIRH |
+| `US` | United States | NOAA/NDBC |
+| `IS` | Iceland | Vegagerðin |
+
+<Tip>
+  Use `GET /api/v2/countries` to get the full list of countries with active buoys.
+</Tip>
