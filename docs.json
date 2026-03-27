@@ -3,9 +3,9 @@
   "theme": "mint",
   "name": "The Buoy API",
   "colors": {
-    "primary": "#0369A1",
-    "light": "#38BDF8",
-    "dark": "#075985"
+    "primary": "#6B55F6",
+    "light": "#FFF869",
+    "dark": "#030310"
   },
   "favicon": "/favicon.svg",
   "logo": {
