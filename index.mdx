@@ -5,7 +5,7 @@ description: "Real-time ocean buoy data for developers. Wave heights, periods, w
 
 ## What is the Buoy API?
 
-The Buoy API gives you programmatic access to real-time and historical ocean observation data from an international network of wave buoys, weather stations, and surf spots. Data is sourced from official networks including **Candhis**, **Météo France**, **NOAA/NDBC**, **Sofar Ocean**, and others.
+The Buoy API gives you **read-only** access to real-time and historical wave data from an international network of ocean buoys. All documented operations are `GET` requests. Data is sourced from official networks including **Candhis**, **Météo France**, **NOAA/NDBC**, **Sofar Ocean**, and others.
 
 Every response uses a consistent `{status, data, meta}` envelope, making it easy to integrate into any stack.
 
@@ -36,8 +36,8 @@ Every response uses a consistent `{status, data, meta}` envelope, making it easy
   <Accordion title="Historical data" icon="clock-rotate-left">
     Retrieve paginated historical readings per buoy with date range filters, or search for the reading closest to a specific timestamp.
   </Accordion>
-  <Accordion title="Surf spots and forecasts" icon="sun">
-    Access surf spot data with nearby buoy and weather station associations, plus multi-day wave and weather forecasts.
+  <Accordion title="Chart time series" icon="chart-line">
+    Build dashboards with optimized chart payloads: wave height, period, forecasts, and tide levels as aligned time series.
   </Accordion>
   <Accordion title="Rate limiting and tracking" icon="gauge">
     Every response includes `X-RateLimit-*` headers. Requests exceeding your hourly quota return a `429` with a `retry_after` value so your client can back off gracefully.
