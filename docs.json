@@ -7,7 +7,7 @@
     "light": "#FFF869",
     "dark": "#030310"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.png",
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
