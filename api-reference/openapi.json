@@ -531,7 +531,7 @@
           "Buoys"
         ],
         "summary": "Find nearest buoy to coordinates",
-        "description": "Find the closest active buoy(s) to a given latitude and longitude within a maximum distance.\n\nUses an optimized two-step approach:\n1. SQL-level bounding box filtering for fast candidate selection\n2. Exact distance calculation only for candidates within the bounding box\n\n**Performance:** Optimized for speed using bounding box pre-filtering.\n\n**Limit:** Use the `limit` parameter to control how many results are returned (default: 1, max: 20).\n",
+        "description": "Find the closest active buoy(s) to a given latitude and longitude within a maximum distance.\n\nUse the `limit` parameter to control how many results are returned (default: 1, max: 20).\n",
         "operationId": "nearestBuoy",
         "parameters": [
           {
@@ -733,7 +733,7 @@
           "Buoys"
         ],
         "summary": "Get historical readings for a buoy",
-        "description": "Get paginated historical readings for a buoy. Supports filtering by date range.\n\n**Historical Data:** For Candhis buoys, historical data is automatically retrieved from optimized storage for dates older than 2 months, ensuring fast and reliable access to historical readings. Recent data (within 2 months) is retrieved from the live database.\n\n**Pagination:** Default 20 per page, minimum 1, maximum 100 per page.\n",
+        "description": "Get paginated historical readings for a buoy. Supports filtering by date range.\n\n**Pagination:** Default 20 per page, minimum 1, maximum 100 per page.\n",
         "operationId": "getBuoyReadings",
         "parameters": [
           {
@@ -809,26 +809,6 @@
               "minimum": 1,
               "maximum": 100
             }
-          },
-          {
-            "name": "debug",
-            "in": "query",
-            "description": "Enable debug mode to include query plan and SQL in response (adds overhead)",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            },
-            "example": true
-          },
-          {
-            "name": "no_kaminari",
-            "in": "query",
-            "description": "Bypass Kaminari pagination and use manual pagination (for performance testing)",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            },
-            "example": false
           }
         ],
         "responses": {
@@ -908,73 +888,6 @@
                                 "end": {
                                   "type": "string",
                                   "format": "date-time"
-                                }
-                              }
-                            },
-                            "performance": {
-                              "type": "object",
-                              "description": "Performance metrics (always included)",
-                              "properties": {
-                                "parse_date_range_ms": {
-                                  "type": "number",
-                                  "description": "Time to parse date parameters"
-                                },
-                                "query_build_ms": {
-                                  "type": "number",
-                                  "description": "Time to build the query"
-                                },
-                                "count_query_ms": {
-                                  "type": "number",
-                                  "description": "Time for COUNT query"
-                                },
-                                "pagination_setup_ms": {
-                                  "type": "number",
-                                  "description": "Time to set up pagination"
-                                },
-                                "load_records_ms": {
-                                  "type": "number",
-                                  "description": "Time to load records from database"
-                                },
-                                "records_loaded": {
-                                  "type": "integer",
-                                  "description": "Number of records loaded"
-                                },
-                                "total_db_time_ms": {
-                                  "type": "number",
-                                  "description": "Total database query time"
-                                },
-                                "serialization_ms": {
-                                  "type": "number",
-                                  "description": "Time to serialize records"
-                                },
-                                "total_ms": {
-                                  "type": "number",
-                                  "description": "Total request processing time"
-                                },
-                                "timestamp": {
-                                  "type": "string",
-                                  "format": "date-time",
-                                  "description": "Request timestamp"
-                                },
-                                "date_range_hours": {
-                                  "type": "number",
-                                  "description": "Size of date range in hours"
-                                },
-                                "pagination_method": {
-                                  "type": "string",
-                                  "enum": [
-                                    "kaminari",
-                                    "manual"
-                                  ],
-                                  "description": "Pagination method used (kaminari or manual)"
-                                },
-                                "sql_query": {
-                                  "type": "string",
-                                  "description": "SQL query executed (only when debug=true)"
-                                },
-                                "query_plan": {
-                                  "type": "string",
-                                  "description": "PostgreSQL EXPLAIN ANALYZE output (only when debug=true, adds overhead)"
                                 }
                               }
                             }
@@ -1268,7 +1181,7 @@
           "Buoys"
         ],
         "summary": "Get chart data for a buoy",
-        "description": "Returns comprehensive chart data including readings, forecasts, and tide levels.\n\n**Performance:** Uses optimized algorithm (7x faster than legacy version).\n",
+        "description": "Returns comprehensive chart data including readings, forecasts, and tide levels.\n",
         "operationId": "getBuoyChart",
         "parameters": [
           {
@@ -1277,23 +1190,6 @@
             "required": true,
             "schema": {
               "type": "integer"
-            }
-          },
-          {
-            "name": "optimized",
-            "in": "query",
-            "description": "Use optimized version (default: true)",
-            "schema": {
-              "type": "boolean",
-              "default": true
-            }
-          },
-          {
-            "name": "debug",
-            "in": "query",
-            "description": "Include performance metrics in response",
-            "schema": {
-              "type": "boolean"
             }
           }
         ],
