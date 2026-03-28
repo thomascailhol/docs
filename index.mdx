@@ -13,12 +13,15 @@ Every response uses a consistent `{status, data, meta}` envelope, making it easy
   <Card title="Quickstart" icon="rocket" href="/quickstart">
     Make your first API call in under 5 minutes.
   </Card>
+
   <Card title="Authentication" icon="key" href="/authentication">
     Understand how API key authentication works.
   </Card>
+
   <Card title="France Buoys Guide" icon="location-dot" href="/guides/country-buoys">
     Fetch all active buoys for a country in one call.
   </Card>
+
   <Card title="API Reference" icon="code" href="/api-reference/introduction">
     Browse the full endpoint documentation.
   </Card>
@@ -30,15 +33,19 @@ Every response uses a consistent `{status, data, meta}` envelope, making it easy
   <Accordion title="Real-time buoy readings" icon="wave-square">
     Access the latest wave height, period, direction, and water temperature from hundreds of active buoys worldwide. Readings are typically updated every 30 minutes.
   </Accordion>
+
   <Accordion title="Country and geographic filtering" icon="earth-europe">
-    Filter buoys by ISO country code (`?country=FR`), geographic bounding box, or a coordinates + radius query. Each response includes pagination metadata.
+    Filter buoys by ISO country code (`?country=FR`), geographic bounding box, or a coordinates \+ radius query. Each response includes pagination metadata.
   </Accordion>
+
   <Accordion title="Historical data" icon="clock-rotate-left">
     Retrieve paginated historical readings per buoy with date range filters, or search for the reading closest to a specific timestamp.
   </Accordion>
+
   <Accordion title="Chart time series" icon="chart-line">
     Build dashboards with optimized chart payloads: wave height, period, forecasts, and tide levels as aligned time series.
   </Accordion>
+
   <Accordion title="Rate limiting and tracking" icon="gauge">
     Every response includes `X-RateLimit-*` headers. Requests exceeding your hourly quota return a `429` with a `retry_after` value so your client can back off gracefully.
   </Accordion>
@@ -47,7 +54,7 @@ Every response uses a consistent `{status, data, meta}` envelope, making it easy
 ## API at a Glance
 
 | Property | Value |
-|----------|-------|
+| --- | --- |
 | Base URL | `https://thesurfkit.com/api/v2` |
 | Auth | `Authorization: Bearer <api_key>` |
 | Format | JSON (`application/json`) |
@@ -57,7 +64,7 @@ Every response uses a consistent `{status, data, meta}` envelope, making it easy
 ## Data Sources
 
 | Network | Region | Type |
-|---------|--------|------|
+| --- | --- | --- |
 | Candhis | France | Wave buoys |
 | Météo France | France | Wave buoys |
 | NOAA / NDBC | USA | Wave & weather buoys |
@@ -67,5 +74,5 @@ Every response uses a consistent `{status, data, meta}` envelope, making it easy
 ---
 
 <Note>
-  API access is currently by invitation. To request access, email [api-support@thesurfkit.com](mailto:api-support@thesurfkit.com).
+  API access is currently by invitation. To request access, email [thomas@thesurfkit.com.](mailto:thomas@thesurfkit.com)
 </Note>
