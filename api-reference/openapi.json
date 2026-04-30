@@ -3,7 +3,7 @@
   "info": {
     "title": "The Buoy API",
     "version": "2.0.0",
-    "description": "**The Buoy API** — programmatic access to ocean wave buoys on The Surf Kit platform.\n\nAll operations are **read-only** (`GET`). Data includes live and historical readings, geographic filters, and chart time series.\n\n## Authentication\n\nPass your API key in the `Authorization` header:\n\n```\nAuthorization: Bearer YOUR_API_KEY\n```\n\n`GET /buoys/search` and `GET /buoys/nearest` are public (no key required).\n\n## Rate limiting\n\nResponses include `X-RateLimit-*` headers. Exceeding your hourly quota returns `429 Too Many Requests`.",
+    "description": "**The Buoy API** — programmatic access to ocean wave buoys on The Surf Kit platform.\n\nAll operations are **read-only** (`GET`). Data includes live and historical readings, geographic filters, chart time series, and **`GET /conditions`** (combined forecast, buoy reading, and tide for a point).\n\n## Authentication\n\nPass your API key in the `Authorization` header:\n\n```\nAuthorization: Bearer YOUR_API_KEY\n```\n\n`GET /buoys/search` and `GET /buoys/nearest` are public (no key required).\n\n## Rate limiting\n\nResponses include `X-RateLimit-*` headers. Exceeding your hourly quota returns `429 Too Many Requests`.",
     "contact": {
       "name": "API Support",
       "email": "api-support@thesurfkit.com"
@@ -14,7 +14,7 @@
   },
   "servers": [
     {
-      "url": "https://thesurfkit.com/api/v2",
+      "url": "https://api.thebuoy.app/v2",
       "description": "Production server (V2)"
     },
     {
@@ -25,7 +25,11 @@
   "tags": [
     {
       "name": "Buoys",
-      "description": "Real-time ocean buoy data — list, search, readings, and chart data."
+      "description": "Real-time ocean buoy data"
+    },
+    {
+      "name": "Conditions",
+      "description": "All-in-one conditions endpoint"
     }
   ],
   "security": [
@@ -1062,6 +1066,326 @@
         ]
       }
     },
+    "/buoys/{buoy_id}/readings/series": {
+      "get": {
+        "tags": [
+          "Buoys"
+        ],
+        "summary": "Get seasonal buoy reading series",
+        "description": "Returns grouped year-over-year seasonal time series for a single buoy without pagination.\n\nSupports Météo-France and Candhis buoys and is intended for server-side consumers\nthat need chart-ready seasonal comparison data. Metric availability is source-specific:\nMétéo-France supports wave, water temperature, and wind metrics; Candhis supports wave\nmetrics only. For Candhis, `significient_height` maps to H13D (H1/3),\n`period` maps to TH13D (significant wave period), and `peak_period` maps\nto TP (peak period).\n\nWhen `start_year` and `end_year` are omitted, the endpoint returns the last 10 complete\nseasons. Explicit year ranges can request up to 13 seasons, for example `2013..2025`.\n",
+        "operationId": "getBuoyReadingSeries",
+        "parameters": [
+          {
+            "name": "buoy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "required": true,
+            "description": "Metric to return for the seasonal series. Candhis supports `significient_height`, `maximum_height`, `period`, `peak_period`, and `direction`.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "significient_height",
+                "maximum_height",
+                "period",
+                "peak_period",
+                "direction",
+                "water_temperature",
+                "wind_speed",
+                "wind_direction",
+                "gust_speed"
+              ]
+            }
+          },
+          {
+            "name": "bucket",
+            "in": "query",
+            "description": "Bucket size for grouping the seasonal series",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "hour",
+                "day",
+                "week"
+              ],
+              "default": "hour"
+            }
+          },
+          {
+            "name": "aggregation",
+            "in": "query",
+            "description": "Aggregation used when bucket is day or week",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "median",
+                "avg",
+                "min",
+                "max"
+              ],
+              "default": "median"
+            }
+          },
+          {
+            "name": "start_year",
+            "in": "query",
+            "description": "Inclusive first season year. Explicit ranges can span up to 13 seasons.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "end_year",
+            "in": "query",
+            "description": "Inclusive last season year. Explicit ranges can span up to 13 seasons.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "season_start_month",
+            "in": "query",
+            "description": "Season start month",
+            "schema": {
+              "type": "integer",
+              "default": 4,
+              "minimum": 1,
+              "maximum": 12
+            }
+          },
+          {
+            "name": "season_start_day",
+            "in": "query",
+            "description": "Season start day of month",
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1,
+              "maximum": 31
+            }
+          },
+          {
+            "name": "season_end_month",
+            "in": "query",
+            "description": "Season end month",
+            "schema": {
+              "type": "integer",
+              "default": 6,
+              "minimum": 1,
+              "maximum": 12
+            }
+          },
+          {
+            "name": "season_end_day",
+            "in": "query",
+            "description": "Season end day of month",
+            "schema": {
+              "type": "integer",
+              "default": 30,
+              "minimum": 1,
+              "maximum": 31
+            }
+          },
+          {
+            "name": "timezone",
+            "in": "query",
+            "description": "IANA timezone used for bucket boundaries and labels. Defaults to the buoy timezone or UTC.",
+            "schema": {
+              "type": "string",
+              "example": "Europe/Paris"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Seasonal chart series grouped by year",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "buoy": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "lat": {
+                              "type": "number",
+                              "format": "float"
+                            },
+                            "lng": {
+                              "type": "number",
+                              "format": "float"
+                            },
+                            "source": {
+                              "type": "string"
+                            },
+                            "dtz": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          }
+                        },
+                        "metric": {
+                          "type": "string",
+                          "enum": [
+                            "significient_height",
+                            "maximum_height",
+                            "period",
+                            "peak_period",
+                            "direction",
+                            "water_temperature",
+                            "wind_speed",
+                            "wind_direction",
+                            "gust_speed"
+                          ]
+                        },
+                        "bucket": {
+                          "type": "string",
+                          "enum": [
+                            "hour",
+                            "day",
+                            "week"
+                          ]
+                        },
+                        "aggregation": {
+                          "type": "string",
+                          "nullable": true,
+                          "enum": [
+                            "median",
+                            "avg",
+                            "min",
+                            "max"
+                          ]
+                        },
+                        "timezone": {
+                          "type": "string"
+                        },
+                        "season": {
+                          "$ref": "#/components/schemas/SeasonRange"
+                        },
+                        "years": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/BuoySeasonalSeriesYear"
+                          }
+                        },
+                        "count": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "description": "Non-paginated response metadata"
+                    }
+                  }
+                },
+                "example": {
+                  "status": "success",
+                  "data": {
+                    "buoy": {
+                      "id": 295,
+                      "name": "Azur",
+                      "lat": 43.38,
+                      "lng": 7.83,
+                      "source": "Météo France",
+                      "dtz": "Europe/Paris"
+                    },
+                    "metric": "significient_height",
+                    "bucket": "day",
+                    "aggregation": "median",
+                    "timezone": "Europe/Paris",
+                    "season": {
+                      "start": {
+                        "month": 4,
+                        "day": 1
+                      },
+                      "end": {
+                        "month": 6,
+                        "day": 30
+                      }
+                    },
+                    "years": [
+                      {
+                        "year": 2025,
+                        "complete": true,
+                        "point_count": 91,
+                        "points": [
+                          {
+                            "bucket_index": 1,
+                            "label": "Apr 01",
+                            "bucket_start": "2025-04-01T00:00:00+02:00",
+                            "bucket_end": "2025-04-01T23:59:59+02:00",
+                            "value": 1.12,
+                            "sample_count": 24
+                          }
+                        ]
+                      }
+                    ],
+                    "count": 91
+                  },
+                  "meta": {}
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "Invalid metric, bucket, aggregation, timezone, or season window"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "description": "Unsupported buoy source for seasonal series",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnprocessableEntity"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
     "/buoys/{buoy_id}/readings/{reading_id}": {
       "get": {
         "tags": [
@@ -1275,6 +1599,472 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/conditions": {
+      "get": {
+        "tags": [
+          "Conditions"
+        ],
+        "summary": "Get all-in-one conditions (V2)",
+        "description": "Returns combined forecast, reading, and tide data for a location in a standardized V2 format.\n\nThis endpoint combines:\n- Wave forecast (height, period, direction, energy)\n- Wind forecast (speed, direction)\n- Swell forecast (height, period, direction)\n- Nearest buoy reading (if available within 50km)\n- Tide information (height, direction, next change)\n\n**Improvements over V1:**\n- ✅ Standardized `{status, data, meta}` response format\n- ✅ Structured JSON data (not human-readable string)\n- ✅ Includes nearby buoy/weather station information\n- ✅ Better error handling\n- ✅ Optional `spot_id` parameter for enhanced context\n- ✅ Forecast metadata (update times, sources)\n",
+        "operationId": "getConditionsV2",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "description": "Latitude in decimal degrees",
+            "example": 43.47967255638358,
+            "schema": {
+              "type": "number",
+              "format": "float",
+              "example": 43.47967255638358
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": true,
+            "description": "Longitude in decimal degrees",
+            "example": -1.5692197193092723,
+            "schema": {
+              "type": "number",
+              "format": "float",
+              "example": -1.5692197193092723
+            }
+          },
+          {
+            "name": "time",
+            "in": "query",
+            "required": true,
+            "description": "ISO 8601 timestamp for which to get conditions",
+            "example": "2026-03-28T12:00:00Z",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2026-03-28T12:00:00Z"
+            }
+          },
+          {
+            "name": "spot_id",
+            "in": "query",
+            "description": "Optional spot ID for enhanced context and nearby data",
+            "example": 1,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with conditions data",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "location": {
+                          "type": "object",
+                          "properties": {
+                            "lat": {
+                              "type": "number",
+                              "format": "float",
+                              "description": "Latitude",
+                              "example": 43.47967255638358
+                            },
+                            "lng": {
+                              "type": "number",
+                              "format": "float",
+                              "description": "Longitude",
+                              "example": -1.5692197193092723
+                            },
+                            "timezone": {
+                              "type": "string",
+                              "description": "Timezone for the location",
+                              "example": "Europe/Paris"
+                            }
+                          }
+                        },
+                        "forecast": {
+                          "type": "object",
+                          "description": "Wave, wind, and swell forecast data",
+                          "properties": {
+                            "waves_height": {
+                              "type": "number",
+                              "format": "float",
+                              "description": "Forecast wave height in meters",
+                              "example": 1.5
+                            },
+                            "waves_period": {
+                              "type": "number",
+                              "format": "float",
+                              "description": "Forecast wave period in seconds",
+                              "example": 8.5
+                            },
+                            "waves_direction": {
+                              "type": "string",
+                              "description": "Forecast wave direction (compass direction)",
+                              "example": "SW"
+                            },
+                            "wind_speed": {
+                              "type": "number",
+                              "format": "float",
+                              "description": "Forecast wind speed in km/h",
+                              "example": 15
+                            },
+                            "wind_direction": {
+                              "type": "string",
+                              "description": "Forecast wind direction (compass direction)",
+                              "example": "NW"
+                            },
+                            "swell_height": {
+                              "type": "number",
+                              "format": "float",
+                              "description": "Forecast swell height in meters",
+                              "example": 1.2
+                            },
+                            "swell_period": {
+                              "type": "number",
+                              "format": "float",
+                              "description": "Forecast swell period in seconds",
+                              "example": 10
+                            },
+                            "swell_direction": {
+                              "type": "string",
+                              "description": "Forecast swell direction (compass direction)",
+                              "example": "SW"
+                            },
+                            "wave_energy": {
+                              "type": "number",
+                              "format": "float",
+                              "description": "Wave energy in kJ per meter per wave",
+                              "example": 25.5
+                            }
+                          }
+                        },
+                        "reading": {
+                          "type": "object",
+                          "description": "Nearest buoy reading (if available within 50km)",
+                          "nullable": true,
+                          "properties": {
+                            "exists": {
+                              "type": "boolean",
+                              "description": "Whether a reading was found",
+                              "example": true
+                            },
+                            "significient_height": {
+                              "type": "number",
+                              "format": "float",
+                              "description": "Significant wave height in meters",
+                              "example": 1.8
+                            },
+                            "maximum_height": {
+                              "type": "number",
+                              "format": "float",
+                              "description": "Maximum wave height in meters",
+                              "example": 2.5
+                            },
+                            "direction_degrees": {
+                              "type": "integer",
+                              "description": "Wave direction in degrees (0-360)",
+                              "example": 225
+                            },
+                            "period": {
+                              "type": "integer",
+                              "description": "Wave period in seconds",
+                              "example": 9
+                            },
+                            "time": {
+                              "type": "string",
+                              "format": "date-time",
+                              "description": "Reading timestamp",
+                              "example": "2026-03-28T11:45:00Z"
+                            },
+                            "wave_energy": {
+                              "type": "number",
+                              "format": "float",
+                              "description": "Wave energy in kJ per meter per wave",
+                              "example": 28.3
+                            },
+                            "buoy": {
+                              "type": "object",
+                              "description": "Information about the buoy providing the reading",
+                              "properties": {
+                                "id": {
+                                  "type": "integer",
+                                  "example": 10
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "Anglet"
+                                },
+                                "distance_km": {
+                                  "type": "number",
+                                  "format": "float",
+                                  "description": "Distance from location in kilometers",
+                                  "example": 2.5
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "tide": {
+                          "type": "object",
+                          "description": "Tide information for the location",
+                          "properties": {
+                            "height": {
+                              "type": "number",
+                              "format": "float",
+                              "description": "Current tide height in meters",
+                              "example": 1.2
+                            },
+                            "time": {
+                              "type": "string",
+                              "format": "date-time",
+                              "description": "Time of the tide reading",
+                              "example": "2026-03-28T12:00:00Z"
+                            },
+                            "direction": {
+                              "type": "string",
+                              "enum": [
+                                "rising",
+                                "falling"
+                              ],
+                              "description": "Current tide direction",
+                              "example": "rising"
+                            },
+                            "seconds_to_next_tide_change": {
+                              "type": "integer",
+                              "description": "Seconds until the next tide change (high or low)",
+                              "example": 3600
+                            },
+                            "next_tide": {
+                              "type": "string",
+                              "enum": [
+                                "high",
+                                "low"
+                              ],
+                              "description": "Type of the next tide change",
+                              "example": "high"
+                            },
+                            "next_tide_height": {
+                              "type": "number",
+                              "format": "float",
+                              "description": "Height of the next tide in meters",
+                              "example": 2.5
+                            },
+                            "harbor": {
+                              "type": "string",
+                              "description": "Harbor name used for tide calculations",
+                              "example": "Biarritz"
+                            }
+                          }
+                        },
+                        "metadata": {
+                          "type": "object",
+                          "description": "Additional metadata about the data sources",
+                          "properties": {
+                            "forecast_updated_at": {
+                              "type": "string",
+                              "format": "date-time",
+                              "description": "When the forecast was last updated",
+                              "example": "2026-03-28T09:00:00Z"
+                            },
+                            "reading_age_minutes": {
+                              "type": "integer",
+                              "description": "Age of the reading in minutes (if reading exists)",
+                              "nullable": true,
+                              "example": 15
+                            },
+                            "tide_source": {
+                              "type": "string",
+                              "description": "Source of tide data",
+                              "example": "shom"
+                            }
+                          }
+                        },
+                        "units": {
+                          "type": "object",
+                          "description": "Units used for measurements",
+                          "properties": {
+                            "height": {
+                              "type": "string",
+                              "example": "m"
+                            },
+                            "speed": {
+                              "type": "string",
+                              "example": "km/h"
+                            }
+                          }
+                        },
+                        "human_readable": {
+                          "type": "string",
+                          "description": "Optional human-readable conditions description (for compatibility)",
+                          "example": "📍 Anglet buoy (2.5km away)..."
+                        }
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "timestamp": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "Response timestamp",
+                          "example": "2026-03-28T12:00:00Z"
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "with_reading": {
+                    "summary": "Conditions with buoy reading",
+                    "value": {
+                      "status": "success",
+                      "data": {
+                        "location": {
+                          "lat": 43.47967255638358,
+                          "lng": -1.5692197193092723,
+                          "timezone": "Europe/Paris"
+                        },
+                        "forecast": {
+                          "waves_height": 1.5,
+                          "waves_period": 8.5,
+                          "waves_direction": "SW",
+                          "wind_speed": 15,
+                          "wind_direction": "NW",
+                          "swell_height": 1.2,
+                          "swell_period": 10,
+                          "swell_direction": "SW",
+                          "wave_energy": 25.5
+                        },
+                        "reading": {
+                          "exists": true,
+                          "significient_height": 1.8,
+                          "maximum_height": 2.5,
+                          "direction_degrees": 225,
+                          "period": 9,
+                          "time": "2026-03-28T11:45:00Z",
+                          "wave_energy": 28.3,
+                          "buoy": {
+                            "id": 10,
+                            "name": "Anglet",
+                            "distance_km": 2.5
+                          }
+                        },
+                        "tide": {
+                          "height": 1.2,
+                          "time": "2026-03-28T12:00:00Z",
+                          "direction": "rising",
+                          "seconds_to_next_tide_change": 3600,
+                          "next_tide": "high",
+                          "next_tide_height": 2.5,
+                          "harbor": "Biarritz"
+                        },
+                        "metadata": {
+                          "forecast_updated_at": "2026-03-28T09:00:00Z",
+                          "reading_age_minutes": 15,
+                          "tide_source": "shom"
+                        },
+                        "units": {
+                          "height": "m",
+                          "speed": "km/h"
+                        }
+                      },
+                      "meta": {
+                        "timestamp": "2026-03-28T12:00:00Z"
+                      }
+                    }
+                  },
+                  "forecast_only": {
+                    "summary": "Conditions with forecast only (no nearby buoy)",
+                    "value": {
+                      "status": "success",
+                      "data": {
+                        "location": {
+                          "lat": 43.47967255638358,
+                          "lng": -1.5692197193092723,
+                          "timezone": "Europe/Paris"
+                        },
+                        "forecast": {
+                          "waves_height": 1.5,
+                          "waves_period": 8.5,
+                          "waves_direction": "SW",
+                          "wind_speed": 15,
+                          "wind_direction": "NW",
+                          "swell_height": 1.2,
+                          "swell_period": 10,
+                          "swell_direction": "SW",
+                          "wave_energy": 25.5
+                        },
+                        "reading": {
+                          "exists": false
+                        },
+                        "tide": {
+                          "height": 1.2,
+                          "time": "2026-03-28T12:00:00Z",
+                          "direction": "rising",
+                          "seconds_to_next_tide_change": 3600,
+                          "next_tide": "high",
+                          "next_tide_height": 2.5,
+                          "harbor": "Biarritz"
+                        },
+                        "metadata": {
+                          "forecast_updated_at": "2026-03-28T09:00:00Z",
+                          "reading_age_minutes": null,
+                          "tide_source": "shom"
+                        },
+                        "units": {
+                          "height": "m",
+                          "speed": "km/h"
+                        }
+                      },
+                      "meta": {
+                        "timestamp": "2026-03-28T12:00:00Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest",
+            "description": "Missing required parameters (lat, lng, or time) or invalid format"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           },
           "429": {
             "$ref": "#/components/responses/RateLimitExceeded"
@@ -1566,6 +2356,72 @@
           }
         }
       },
+      "SeasonRange": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "object",
+            "properties": {
+              "month": {
+                "type": "integer"
+              },
+              "day": {
+                "type": "integer"
+              }
+            }
+          },
+          "end": {
+            "type": "object",
+            "properties": {
+              "month": {
+                "type": "integer"
+              },
+              "day": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "BuoySeasonalSeriesYear": {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer"
+          },
+          "complete": {
+            "type": "boolean",
+            "description": "Whether the requested season is complete for this year"
+          },
+          "point_count": {
+            "type": "integer"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuoySeasonalSeriesPoint"
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "type": "object",
+        "description": "Validation error response (422)",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "details": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        ]
+      },
       "ErrorResponse": {
         "type": "object",
         "description": "Standardized error response format for V2 API",
@@ -1583,6 +2439,36 @@
           "details": {
             "type": "object",
             "description": "Additional error details (optional, varies by error type)"
+          }
+        }
+      },
+      "BuoySeasonalSeriesPoint": {
+        "type": "object",
+        "properties": {
+          "bucket_index": {
+            "type": "integer",
+            "description": "Season-relative bucket index"
+          },
+          "label": {
+            "type": "string",
+            "description": "Display label for the bucket"
+          },
+          "bucket_start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "bucket_end": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "value": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "sample_count": {
+            "type": "integer",
+            "description": "Number of raw readings contributing to the bucket"
           }
         }
       }
