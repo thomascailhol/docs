@@ -17,7 +17,7 @@ If you want **all buoys in a country** and don't have IDs stored yet, use [`GET 
 
 ```bash
 curl -H "Authorization: Bearer YOUR_API_KEY" \
-  "https://thesurfkit.com/api/v2/buoys/last_readings?ids=12,45,78"
+  "https://api.thebuoy.app/v2/buoys/last_readings?ids=12,45,78"
 ```
 
 By default, only the **first 3 IDs** in your list are returned. To fetch more, pass a `limit`:
@@ -25,7 +25,7 @@ By default, only the **first 3 IDs** in your list are returned. To fetch more, p
 ```bash
 # Fetch up to 100 buoys at once
 curl -H "Authorization: Bearer YOUR_API_KEY" \
-  "https://thesurfkit.com/api/v2/buoys/last_readings?ids=12,45,78,91,34&limit=5"
+  "https://api.thebuoy.app/v2/buoys/last_readings?ids=12,45,78,91,34&limit=5"
 ```
 
 ## Parameters
@@ -88,7 +88,7 @@ If you have more than 100 buoys, chunk the ID list and make multiple calls. Each
 import requests
 
 API_KEY = "YOUR_API_KEY"
-BASE_URL = "https://thesurfkit.com/api/v2"
+BASE_URL = "https://api.thebuoy.app/v2"
 
 def fetch_last_readings(buoy_ids: list[int], chunk_size: int = 100) -> list[dict]:
     headers = {"Authorization": f"Bearer {API_KEY}"}
