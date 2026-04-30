@@ -59,7 +59,7 @@
           },
           {
             "group": "Endpoints",
-            "openapi": "../mintlify-openapi.json"
+            "openapi": "api-reference/openapi.json"
           }
         ]
       }
