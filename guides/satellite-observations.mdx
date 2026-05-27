@@ -1,0 +1,144 @@
+---
+title: "Satellite Observations"
+description: "Query wave data from satellite altimeter missions — CFOSAT, Jason-3, Sentinel-3, and more — alongside in-situ buoys."
+---
+
+## What are satellite observations?
+
+Beyond fixed, in-situ buoys, the API also surfaces **wave measurements from satellite altimeter missions**. As a satellite passes overhead, its altimeter measures significant wave height (and related parameters) along its orbital track. These open-ocean measurements complement the coastal buoy network, extending coverage to areas no physical buoy reaches.
+
+Each satellite overpass is grouped into a **pass** — one orbital segment over the network, with its own time window, geographic bounds, and a count of the observations it produced. Passes are attributed to the **mission** that produced them (e.g. CFOSAT), so you can filter to a single satellite.
+
+<Note>
+  Satellite observations are read-only, like the rest of the API. They surface through the buoy-namespaced endpoints below.
+</Note>
+
+## Available missions
+
+Each pass is linked to one mission. The current set:
+
+| Mission | Agency | Instrument |
+| --- | --- | --- |
+| CFOSAT | CNES / CNSA | SWIM |
+| Jason-3 | NASA / CNES / EUMETSAT / NOAA | Poseidon-3B |
+| Sentinel-3A | ESA / Copernicus | SRAL |
+| Sentinel-3B | ESA / Copernicus | SRAL |
+| Sentinel-6A | ESA / EUMETSAT / NASA / NOAA | Poseidon-4 |
+| SWOT nadir | NASA / CNES | Nadir altimeter |
+| Saral/AltiKa | ISRO / CNES | AltiKa |
+| CryoSat-2 | ESA | SIRAL |
+| HaiYang-2B | CNSA / NSOAS | Radar altimeter |
+| HaiYang-2C | CNSA / NSOAS | Radar altimeter |
+
+Rather than hard-coding this list, fetch it at runtime from the discovery endpoint below — it always reflects what's available.
+
+## Discover missions
+
+`GET /buoys/satellites` lists every mission with its metadata and a count of recorded passes. Use a returned `slug` as the filter value for satellite passes.
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://api.thebuoy.app/v2/buoys/satellites"
+```
+
+```json
+{
+  "status": "success",
+  "data": {
+    "satellites": [
+      {
+        "slug": "cfosat",
+        "name": "CFOSAT",
+        "agency": "CNES / CNSA",
+        "instrument": "SWIM",
+        "description": "Joint French–Chinese mission measuring ocean surface wind and directional wave spectra with the SWIM scatterometer.",
+        "image_url": null,
+        "pass_count": 220
+      }
+    ],
+    "count": 12
+  },
+  "meta": { "timestamp": "2026-05-27T09:00:00Z" }
+}
+```
+
+### Localized descriptions
+
+Mission `description` is available in **English and French**. Select the language with `?locale=` (or the `Accept-Language` header); it defaults to English.
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://api.thebuoy.app/v2/buoys/satellites?locale=fr"
+```
+
+```json
+{
+  "slug": "cfosat",
+  "name": "CFOSAT",
+  "description": "Mission franco-chinoise mesurant le vent de surface et les spectres directionnels des vagues à l'aide du diffusiomètre SWIM."
+}
+```
+
+## Filter passes by mission
+
+`GET /buoys/satellite_passes` returns recent passes. Pass `mission` (a slug from the discovery endpoint) to get only that satellite's passes.
+
+```bash
+# Only CFOSAT passes
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://api.thebuoy.app/v2/buoys/satellite_passes?mission=cfosat"
+```
+
+An unknown slug returns `404 resource_not_found`. Omit `mission` to get passes from all satellites.
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `mission` | string | — | Filter to one mission, by `slug` (see `/buoys/satellites`) |
+| `active_only` | boolean | `true` | Only passes that have fresh, displayable buoy readings |
+| `since` | string (ISO 8601) | — | Only passes at or after this timestamp |
+| `limit` | integer | `20` | Max passes to return (max `100`) |
+
+### Response
+
+```json
+{
+  "status": "success",
+  "data": {
+    "satellite_passes": [
+      {
+        "id": 1842,
+        "name": "Bay of Biscay pass · CFOSAT · 14 May 10:00 UTC",
+        "external_id": "cfosat-...",
+        "satellite_pass_id": "cfosat-...",
+        "platform": "CFOSAT",
+        "mission": { "slug": "cfosat", "name": "CFOSAT" },
+        "started_at": "2026-05-14T10:00:00Z",
+        "ended_at": "2026-05-14T10:20:00Z",
+        "buoy_count": 6,
+        "observation_count": 18,
+        "bounds": { "south": 43.0, "west": -5.0, "north": 47.0, "east": -1.0 }
+      }
+    ],
+    "count": 1
+  },
+  "meta": { "timestamp": "2026-05-27T09:00:00Z" }
+}
+```
+
+Each pass embeds a compact `mission` reference (`slug` + `name`); `platform` is the raw label stored on the pass. Use `bounds` to place the pass on a map and `buoy_count` / `observation_count` to gauge its density.
+
+## Typical flow
+
+<Steps>
+  <Step title="Discover missions">
+    Call `GET /buoys/satellites` once to learn the available `slug`s and pass counts.
+  </Step>
+  <Step title="Filter passes">
+    Call `GET /buoys/satellite_passes?mission=<slug>` to pull that satellite's recent passes.
+  </Step>
+  <Step title="Map or chart">
+    Use each pass's `bounds`, time window, and counts to render coverage or feed a dashboard.
+  </Step>
+</Steps>

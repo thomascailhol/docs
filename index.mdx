@@ -22,6 +22,10 @@ Every response uses a consistent `{status, data, meta}` envelope, making it easy
     Fetch all active buoys for a country in one call.
   </Card>
 
+  <Card title="Satellite Observations" icon="satellite" href="/guides/satellite-observations">
+    Query wave data from altimeter missions like CFOSAT and Jason-3.
+  </Card>
+
   <Card title="API Reference" icon="code" href="/api-reference/introduction">
     Browse the full endpoint documentation.
   </Card>
@@ -44,6 +48,10 @@ Every response uses a consistent `{status, data, meta}` envelope, making it easy
 
   <Accordion title="Chart time series" icon="chart-line">
     Build dashboards with optimized chart payloads: wave height, period, forecasts, and tide levels as aligned time series.
+  </Accordion>
+
+  <Accordion title="Satellite altimeter observations" icon="satellite">
+    Go beyond fixed buoys with open-ocean wave measurements from satellite missions — CFOSAT, Jason-3, Sentinel-3, SWOT, and more. Discover missions via `GET /buoys/satellites` and filter passes by mission. See the [Satellite Observations guide](/guides/satellite-observations).
   </Accordion>
 
   <Accordion title="Rate limiting and tracking" icon="gauge">
