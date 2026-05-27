@@ -29,7 +29,7 @@
     },
     {
       "name": "Satellite Passes",
-      "description": "Satellite altimeter passes over virtual buoys, and the missions behind them"
+      "description": "Satellite passes over virtual buoys, and the missions behind them"
     },
     {
       "name": "Conditions",
@@ -1620,8 +1620,8 @@
         "tags": [
           "Satellite Passes"
         ],
-        "summary": "List satellite altimeter passes",
-        "description": "List recorded satellite altimeter passes over virtual buoys.\n\nFilter to a single satellite with `mission` — a slug returned by\n`GET /buoys/satellites` (e.g. `cfosat`). An unknown slug returns `404`.\n",
+        "summary": "List satellite passes",
+        "description": "List recorded satellite passes over virtual buoys. Passes come from\nradar-altimeter missions (Jason-3, Sentinel-3/6, Saral/AltiKa, CryoSat-2,\nHaiYang-2) and from CFOSAT's SWIM wave scatterometer.\n\nFilter to a single satellite with `mission` — a slug returned by\n`GET /buoys/satellites` (e.g. `cfosat`). An unknown slug returns `404`.\n",
         "operationId": "listSatellitePasses",
         "parameters": [
           {

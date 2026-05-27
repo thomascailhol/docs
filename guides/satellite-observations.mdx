@@ -1,11 +1,11 @@
 ---
 title: "Satellite Observations"
-description: "Query wave data from satellite altimeter missions — CFOSAT, Jason-3, Sentinel-3, and more — alongside in-situ buoys."
+description: "Query wave data from satellite missions — CFOSAT, Jason-3, Sentinel-3, and more — alongside in-situ buoys."
 ---
 
 ## What are satellite observations?
 
-Beyond fixed, in-situ buoys, the API also surfaces **wave measurements from satellite altimeter missions**. As a satellite passes overhead, its altimeter measures significant wave height (and related parameters) along its orbital track. These open-ocean measurements complement the coastal buoy network, extending coverage to areas no physical buoy reaches.
+Beyond fixed, in-situ buoys, the API also surfaces **wave measurements made from space**. As a satellite passes overhead, its radar instrument measures significant wave height (and related parameters) along its ground track. Most of these missions use **radar altimeters** (Jason-3, the Sentinel-3 and Sentinel-6 series, Saral/AltiKa, CryoSat-2, HaiYang-2); **CFOSAT** is different — it carries the **SWIM wave scatterometer**, which measures directional wave spectra. Either way, these open-ocean measurements complement the coastal buoy network, extending coverage to areas no physical buoy reaches.
 
 Each satellite overpass is grouped into a **pass** — one orbital segment over the network, with its own time window, geographic bounds, and a count of the observations it produced. Passes are attributed to the **mission** that produced them (e.g. CFOSAT), so you can filter to a single satellite.
 
