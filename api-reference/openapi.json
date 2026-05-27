@@ -28,6 +28,10 @@
       "description": "Real-time ocean buoy data"
     },
     {
+      "name": "Satellite Passes",
+      "description": "Satellite altimeter passes over virtual buoys, and the missions behind them"
+    },
+    {
       "name": "Conditions",
       "description": "All-in-one conditions endpoint"
     }
@@ -1611,6 +1615,194 @@
         ]
       }
     },
+    "/buoys/satellite_passes": {
+      "get": {
+        "tags": [
+          "Satellite Passes"
+        ],
+        "summary": "List satellite altimeter passes",
+        "description": "List recorded satellite altimeter passes over virtual buoys.\n\nFilter to a single satellite with `mission` — a slug returned by\n`GET /buoys/satellites` (e.g. `cfosat`). An unknown slug returns `404`.\n",
+        "operationId": "listSatellitePasses",
+        "parameters": [
+          {
+            "name": "mission",
+            "in": "query",
+            "description": "Filter passes to a single satellite mission, by slug (see `GET /buoys/satellites`).",
+            "schema": {
+              "type": "string"
+            },
+            "example": "cfosat"
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "description": "When true (default), return only passes that have fresh, displayable buoy readings.",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "description": "Only return passes at or after this ISO 8601 timestamp.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "example": "2026-05-01T00:00:00Z"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of passes to return (default: 20, max: 100).",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "satellite_passes": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/SatellitePass"
+                          }
+                        },
+                        "count": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound",
+            "description": "Unknown mission slug"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/buoys/satellites": {
+      "get": {
+        "tags": [
+          "Satellite Passes"
+        ],
+        "summary": "List available satellites/missions",
+        "description": "Discovery endpoint listing the satellite missions you can filter passes by,\nwith each mission's pass count and metadata.\n\nUse a returned `slug` as the `mission` filter on `GET /buoys/satellite_passes`.\n\nMission `description` is localized (English/French). Select the language\nwith `?locale=` or the `Accept-Language` header; defaults to English.\n",
+        "operationId": "listSatellites",
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "query",
+            "description": "Language for localized text (the mission `description`). `Accept-Language` is also honored.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en",
+                "fr"
+              ],
+              "default": "en"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "satellites": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/SatelliteMission"
+                          }
+                        },
+                        "count": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
     "/conditions": {
       "get": {
         "tags": [
@@ -2422,6 +2614,115 @@
           }
         ]
       },
+      "SatellitePass": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "example": "Bay of Biscay pass · CFOSAT · 14 May 10:00 UTC"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "satellite_pass_id": {
+            "type": "string",
+            "description": "Alias of external_id."
+          },
+          "platform": {
+            "type": "string",
+            "nullable": true,
+            "description": "Raw platform label stored on the pass.",
+            "example": "CFOSAT"
+          },
+          "mission": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SatelliteMissionRef"
+              }
+            ],
+            "nullable": true,
+            "description": "Resolved satellite mission, or null when unknown."
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "ended_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "buoy_count": {
+            "type": "integer"
+          },
+          "observation_count": {
+            "type": "integer"
+          },
+          "bounds": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "south": {
+                "type": "number",
+                "nullable": true
+              },
+              "west": {
+                "type": "number",
+                "nullable": true
+              },
+              "north": {
+                "type": "number",
+                "nullable": true
+              },
+              "east": {
+                "type": "number",
+                "nullable": true
+              }
+            }
+          }
+        }
+      },
+      "SatelliteMission": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Stable identifier; use as the `mission` filter on satellite_passes.",
+            "example": "cfosat"
+          },
+          "name": {
+            "type": "string",
+            "example": "CFOSAT"
+          },
+          "agency": {
+            "type": "string",
+            "nullable": true,
+            "example": "CNES / CNSA"
+          },
+          "instrument": {
+            "type": "string",
+            "nullable": true,
+            "example": "SWIM"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Localized (en/fr) via the `locale` query param / `Accept-Language`."
+          },
+          "image_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "pass_count": {
+            "type": "integer",
+            "description": "Number of recorded passes for this mission."
+          }
+        }
+      },
       "ErrorResponse": {
         "type": "object",
         "description": "Standardized error response format for V2 API",
@@ -2469,6 +2770,20 @@
           "sample_count": {
             "type": "integer",
             "description": "Number of raw readings contributing to the bucket"
+          }
+        }
+      },
+      "SatelliteMissionRef": {
+        "type": "object",
+        "description": "Compact reference to a satellite mission.",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "example": "cfosat"
+          },
+          "name": {
+            "type": "string",
+            "example": "CFOSAT"
           }
         }
       }
