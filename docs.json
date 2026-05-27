@@ -43,6 +43,7 @@
             "pages": [
               "guides/country-buoys",
               "guides/last-readings",
+              "guides/satellite-observations",
               "guides/rate-limits"
             ]
           }
