@@ -6,7 +6,7 @@
     "description": "**The Buoy API** — programmatic access to ocean wave buoys on The Surf Kit platform.\n\nAll operations are **read-only** (`GET`). Data includes live and historical readings, geographic filters, chart time series, and **`GET /conditions`** (combined forecast, buoy reading, and tide for a point).\n\n## Authentication\n\nPass your API key in the `Authorization` header:\n\n```\nAuthorization: Bearer YOUR_API_KEY\n```\n\n`GET /buoys/search` and `GET /buoys/nearest` are public (no key required).\n\n## Rate limiting\n\nResponses include `X-RateLimit-*` headers. Exceeding your hourly quota returns `429 Too Many Requests`.",
     "contact": {
       "name": "API Support",
-      "email": "api-support@thesurfkit.com"
+      "email": "thomas@thebuoy.app"
     },
     "license": {
       "name": "Proprietary"

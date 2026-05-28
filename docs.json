@@ -22,7 +22,7 @@
     "primary": {
       "type": "button",
       "label": "Get API Access",
-      "href": "mailto:api-support@thesurfkit.com?subject=Buoy%20API%20Access%20Request"
+      "href": "mailto:thomas@thebuoy.app?subject=Buoy%20API%20Access%20Request"
     }
   },
   "navigation": {
@@ -74,7 +74,7 @@
         },
         {
           "anchor": "Support",
-          "href": "mailto:api-support@thesurfkit.com",
+          "href": "mailto:thomas@thebuoy.app",
           "icon": "envelope"
         }
       ]
