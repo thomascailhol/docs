@@ -11,7 +11,7 @@ description: "Efficiently fetch the latest reading for a known list of buoys."
 - You want only reading data, without buoy metadata, for a minimal payload
 - You need targeted polling for a small, fixed set of buoys
 
-If you want **all buoys in a country** and don't have IDs stored yet, use [`GET /buoys?country=FR`](/guides/country-buoys) instead — it returns buoys with readings included in a single call and is the right starting point for building your buoy ID list.
+Don't have IDs yet? Use [`GET /buoys?country=FR`](/guides/country-buoys) — it returns buoys with readings in one call, and is the right starting point for building your ID list.
 
 ## Basic usage
 
@@ -78,7 +78,7 @@ Any IDs you requested that don't exist in the database are returned in `missing_
 
 ## Payload design
 
-The endpoint returns only the fields needed for reading collection. Importantly, the large JSONB forecast columns stored on buoys (`tide_forecast`, `marine_forecast`, `weather_forecast`) are **never included** — keeping payloads lean even at 100 buoys per request.
+The endpoint returns only the fields needed for reading collection. Forecast fields (`tide_forecast`, `marine_forecast`, `weather_forecast`) are excluded to keep payloads small, even at 100 buoys per request.
 
 ## Polling 30+ buoys
 

@@ -5,12 +5,12 @@ description: "Query wave data from satellite altimeter missions — CFOSAT, Jaso
 
 ## What are satellite observations?
 
-Beyond fixed, in-situ buoys, the API also surfaces **wave measurements from satellite altimeter missions**. As a satellite passes overhead, its altimeter measures significant wave height (and related parameters) along its orbital track. These open-ocean measurements complement the coastal buoy network, extending coverage to areas no physical buoy reaches.
+Satellite altimeters measure significant wave height along their orbital tracks, extending coverage to open ocean where no buoy reaches.
 
 Each satellite overpass is grouped into a **pass** — one orbital segment over the network, with its own time window, geographic bounds, and a count of the observations it produced. Passes are attributed to the **mission** that produced them (e.g. CFOSAT), so you can filter to a single satellite.
 
 <Note>
-  Satellite observations are read-only, like the rest of the API. They surface through the buoy-namespaced endpoints below.
+  Satellite observations surface through the buoy-namespaced endpoints below.
 </Note>
 
 ## Available missions
@@ -30,7 +30,7 @@ Each pass is linked to one mission. The current set:
 | HaiYang-2B | CNSA / NSOAS | Radar altimeter |
 | HaiYang-2C | CNSA / NSOAS | Radar altimeter |
 
-Rather than hard-coding this list, fetch it at runtime from the discovery endpoint below — it always reflects what's available.
+Fetch the live list from the discovery endpoint below.
 
 ## Discover missions
 

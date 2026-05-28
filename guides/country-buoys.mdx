@@ -5,7 +5,7 @@ description: "Get all active buoys for a country — with their latest readings 
 
 ## Overview
 
-The most efficient way to collect data for all buoys in a country is to use the `?country=` filter on `GET /buoys`. Unlike calling `last_readings` in batches, **a single country-filtered request returns complete buoy metadata and the latest reading for every active buoy**.
+`GET /buoys?country=XX` returns every active buoy in a country with its latest reading — in one call.
 
 ## Getting all French buoys
 
@@ -14,7 +14,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
   "https://api.thebuoy.app/v2/buoys?country=FR"
 ```
 
-Pass any [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code. France has approximately 25–35 active buoys at any given time, so all results fit in the default page.
+Pass any [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code. France has roughly 25–35 active buoys, so all results fit in the default page.
 
 **Response structure:**
 
@@ -199,7 +199,7 @@ puts JSON.pretty_generate(readings.first)
 
 ## Cron schedule
 
-Buoy readings are typically updated every **30 minutes**. A reasonable polling interval is 30 minutes — more frequent calls would return duplicate readings and consume your rate limit budget unnecessarily.
+Buoy readings are typically updated every **30 minutes**, so 30 minutes is a reasonable polling interval. Polling more often returns duplicates.
 
 ```bash
 # crontab — run every 30 minutes

@@ -7,10 +7,10 @@ description: "All v2 API requests require an API key passed as a Bearer token."
 
 API access is currently by invitation. To request credentials, email [thomas@thebuoy.app](mailto:thomas@thebuoy.app).
 
-Once your request is approved, you will receive a single-use API key. **Store it securely — it is only shown once and cannot be retrieved later.** If you lose your key, a new one can be generated, which will immediately invalidate the old one.
+Once your request is approved, you'll receive an API key. **Store it securely — it's shown only once and cannot be retrieved later.** If you lose it, we can generate a new one, which immediately invalidates the old one.
 
 <Note>
-  API keys are stored as BCrypt hashes. Only you ever see the plain-text key. If it is compromised, contact support to rotate it.
+  If your key is compromised, contact support to rotate it.
 </Note>
 
 ## Using Your API Key
@@ -30,14 +30,14 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 
 ### Query parameter (alternative)
 
-For environments where setting custom headers is difficult, you can pass the key as a query parameter:
+If you can't set headers, pass the key as a query parameter:
 
 ```bash
 curl "https://api.thebuoy.app/v2/buoys?country=FR&api_key=YOUR_API_KEY"
 ```
 
 <Warning>
-  Query parameter auth is provided for convenience only. Prefer the `Authorization` header — query parameters appear in server logs and browser history.
+  Prefer the `Authorization` header — query parameters appear in server logs and browser history.
 </Warning>
 
 ## Public Endpoints

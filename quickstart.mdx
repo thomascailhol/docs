@@ -9,7 +9,7 @@ You need an API key. If you don't have one yet, see [Authentication](/authentica
 
 ## Step 1 — List active buoys
 
-The simplest call: fetch a paginated list of all active buoys. Each buoy already includes its latest reading in the response, so there's no need for a follow-up request.
+Fetch a paginated list of active buoys. Each buoy includes its latest reading — no follow-up call needed.
 
 <CodeGroup>
 
@@ -83,14 +83,14 @@ console.log(data);
 
 ## Step 2 — Filter by country
 
-To get all active buoys in a specific country, pass the ISO 3166-1 alpha-2 country code. The response includes all matching buoys with their latest readings included.
+To get all active buoys in a specific country, pass the ISO 3166-1 alpha-2 country code.
 
 ```bash
 curl -H "Authorization: Bearer YOUR_API_KEY" \
   "https://api.thebuoy.app/v2/buoys?country=FR"
 ```
 
-This single call is the most efficient way to bootstrap a cron job that monitors all French buoys. See the [Country Buoys guide](/guides/country-buoys) for a complete cron job pattern.
+Use this to bootstrap a cron job over all French buoys. See the [Country Buoys guide](/guides/country-buoys) for a complete pattern.
 
 ## Step 3 — Get targeted last readings
 
